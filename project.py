@@ -5,7 +5,7 @@ import os
 
 class Personnel:
     positions = ["employee", "admin"]
-    departments = ["HR", "SoftwareDev", "Marketing", "Design", "IT", "QualityAssurance", "ProductManager", "Accounting"]
+    departments = ["Accounting", "Admin", "Design", "HR", "IT", "Marketing", "ProductManager", "QualityAssurance", "SoftwareDev" ]
 
     def __init__(self, id_number=None, name=None, position=None, department=None, wage=0):
         self._id_number = id_number
@@ -26,11 +26,7 @@ class Personnel:
 
     @position.setter
     def position(self, position):
-        if position not in Personnel.positions and position != None:
-            print("You have entered an invalid position, please try again.")
-            return 0
-        else:
-            self._position = position
+        self._position = position
 
     @property
     def wage(self):
@@ -38,16 +34,7 @@ class Personnel:
 
     @wage.setter
     def wage(self, wage):
-        try:
-            wage = int(wage)
-            if wage < 0:
-                print("You have entered an invalid Wage. Please try again.")
-                return 0
-            else:
-                self._wage = wage
-        except ValueError:
-            print("You have entered an invalid value. Please try again.")
-            return 0
+        self._wage = wage
 
     @property
     def department(self):
@@ -55,11 +42,7 @@ class Personnel:
 
     @department.setter
     def department(self, department):
-        if department not in Personnel.departments and department != None:
-            print("You have entered an invalid department. Please try again.")
-            return 0
-        else:
-            self._department = department
+        self._department = department
 
     @property
     def name(self):
@@ -67,7 +50,7 @@ class Personnel:
 
     @name.setter
     def name(self, name: str):
-        if not name.isalpha() and name != None:
+        if not name.isalpha() and name is not None:
             print("You have entered an invalid name")
         else:
             self._name = name
@@ -86,53 +69,71 @@ def main():
         with open(id_file, "w") as j:
             id_dict = {"current_id": 0}
             json.dump(id_dict, j, indent=4)
-            last_id_number = 0
-    else:
-        with open(id_file, "r") as j:
-            data = json.load(j)
-            last_id_number = data["current_id"]
 
     while True:
         action = (input("Please enter the action you want to conduct: ")).lower()
 
         if action == "add":
-            add_personnel(last_id_number)
+            add_personnel(id_file)
+        elif action == "find":
+            find_personnel()
         elif action == "remove":
             remove_personnel()
         elif action == "update":
             update_personnel()
 
 
-def add_personnel(last_id_number):
+def add_personnel(id_file):
+    with open(id_file, "r") as j:
+        data = json.load(j)
+        last_id_number = data["current_id"]
+
     id_number = last_id_number + 1
     person = Personnel()
+
     while True:
         name = input("Please enter the name of the personnel: ")
         person.name = name
-
         if person.name == name:
             break
-    while True:
-        position = (input("Please enter the position of the personnel: ")).lower()
-        if position == "admin":
-            person.position = position
-            break
-        else:
-            person.position = position
-            if person.position == position:
-                while True:
-                    department = input("Please enter the department of the personnel: ")
-                    person.department = department
-                    if person.department == department:
-                        break
-            break
-    while True:
-        wage = input("Please enter the wage of the personnel: ")
-        person.wage = wage
-        if person.wage == int(wage):
-            break
 
+    position = (input("Please enter the position of the personnel: ")).lower()
+
+    if position not in Personnel.positions:
+        print("You have entered and invalid position, please try again.")
+        return
+
+    person.position = position
+
+    if position == "admin":
+        person.department = "Admin"
+    else:
+        department = input("Please enter the department of the personnel: ")
+        if department not in Personnel.departments:
+            print("You have entered an invalid department, please try again")
+            return
+        person.department = department
+
+    while True:
+        wage = int(input("Please enter the wage of the personnel: "))
+
+        if wage <= 0:
+            print("You have entered an invalid Wage. Please try again.")
+            return 0
+
+        person.wage = wage
+        if int(person.wage) == int(wage):
+            break
     person.id_number = id_number
+
+    with open("personnel_database.csv", "r") as db:
+        reader = csv.DictReader(db,fieldnames=["ID", "Name", "Position", "Department", "Wage"])
+        database = list(reader)
+        for row in database:
+            if row["Name"] == person.name and row["Position"] == person.position \
+                    and row["Department"] == person.department and int(row["Wage"]) == person.wage:
+                print("The employee already exists in the Database")
+                return
 
     with open("personnel_database.csv", "a") as db:
         writer = csv.DictWriter(db, fieldnames=["ID", "Name", "Position", "Department", "Wage"])
@@ -146,6 +147,9 @@ def add_personnel(last_id_number):
         json.dump(id_dict, j, indent=4)
 
 
+def find_personnel():
+    ...
+
 def remove_personnel():
     ...
 
@@ -157,12 +161,12 @@ def update_personnel():
 if __name__ == "__main__":
     main()
 
-# personel registration program
+# personnel registration program
 # create general class of staff
 # create classes of admin and employees
-# ask for input of personel type
+# ask for input of personnel type
 # according to input, run function
 # create object using function
-# save the personel into a csv file
+# save the personnel into a csv file
 # if the object already exists, ask if they want to update values
 # update the values
